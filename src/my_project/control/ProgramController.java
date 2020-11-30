@@ -2,6 +2,7 @@ package my_project.control;
 
 import KAGO_framework.control.ViewController;
 import my_project.model.Player;
+import my_project.view.ConclusionView;
 import my_project.view.PlayView;
 import my_project.view.PlayerSelectView;
 import my_project.view.StartView;
@@ -17,6 +18,7 @@ public class ProgramController {
 
     //Attribute
     private int targetPort;
+    private int currentTimerValue;
 
     // Referenzen
     private ViewController viewController;  // diese Referenz soll auf ein Objekt der Klasse viewController zeigen. Über dieses Objekt wird das Fenster gesteuert.
@@ -24,8 +26,10 @@ public class ProgramController {
     private StartView startView;
     private PlayerSelectView playerSelectView;
     private PlayView playView;
+    private ConclusionView conclusionView;
     private State state;
     private Player player;
+    private String[] lastRanking;
 
     // Enum
     public enum State {
@@ -80,6 +84,9 @@ public class ProgramController {
                 startView.displayScanning();
             }
         }
+        if(state == State.PLAYERSELECT || state == State.PLAYING){
+            displayTimer();
+        }
     }
 
     /**
@@ -100,6 +107,10 @@ public class ProgramController {
             playView = new PlayView(viewController,this,playerSelectView.getPlayerIcons(),playerSelectView.getSelectedIconIndex(),player.getName(),player.getPunkte());
             SSPNetworkController.sendPlayerName(player);
        }
+        if(state == State.FINISHED){
+            playView.disposeView();
+            conclusionView = new ConclusionView(viewController,this,player.getName(),player.getPunkte(),playerSelectView.getPlayerIcons()[playerSelectView.getSelectedIconIndex()]);
+        }
     }
 
     public void mouseClicked(MouseEvent e){}
@@ -120,8 +131,19 @@ public class ProgramController {
         playView.setEnemyChoice(convertLetterToNumber(auswahl));
     }
 
-    public void verarbeiteNeuePunkte(String punkte){
+    public void verarbeiteNeuePunkte(String[] tokens){
+        lastRanking = tokens;
         try{
+            String punkte = "-999"; // Fehlerwert
+            String status = "Punktestand --- ";
+            for(int i = 0; i < tokens.length; i++){
+                if(tokens[i].equals(player.getName())){
+                    punkte = tokens[i+1];
+                }
+                if(i>0 & i%2 == 1){
+                    status = status + tokens[i] + "-Punkte: "+tokens[i+1]+" ";
+                }
+            }
             int newPoints = Integer.parseInt(punkte);
             if(newPoints > player.getPunkte() + 1){
                 playView.showRoundAnimation(PlayView.RoundAnimation.WINNING);
@@ -132,6 +154,7 @@ public class ProgramController {
             }
             player.setPunkte(newPoints);
             playView.setPlayerPoints(newPoints);
+            playView.setStatusDisplay(status);
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
@@ -163,7 +186,26 @@ public class ProgramController {
         return "";
     }
 
-    public void verarbeiteNeuenStatus(String status){
+    public void verarbeiteNeuenTimer(String timer){
+        try{
+            currentTimerValue = Integer.parseInt(timer);
+        } catch (NumberFormatException e) {
+            currentTimerValue = -1;
+        }
+    }
+
+    private void displayTimer(){
+        String msg = "";
+        if (currentTimerValue == -1){
+            msg = "Keine Timer";
+        } else {
+            msg = "Zeit für deine Entscheidung: "+currentTimerValue+ "s";
+        }
+        if (playView != null) playView.setRemainingTime(msg);
+        if (playerSelectView != null) playerSelectView.setRemainingTime(msg);
+    }
+
+    public void verarbeiteNeuenStatus(String[] status){
         if(status.equals("gewonnen")){
 
         }
@@ -171,12 +213,6 @@ public class ProgramController {
 
         }
         if(status.equals("aussetzen")){
-
-        }
-        if(status.startsWith("wartenAuf")){
-
-        }
-        if(status.equals("startDesTurniers")){
 
         }
     }

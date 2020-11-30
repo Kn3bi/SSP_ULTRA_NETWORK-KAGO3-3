@@ -29,6 +29,9 @@ public class PlayView extends ProgramView {
     private boolean winning;
     private RoundAnimation currentAni;
     private double aniTimer;
+    private String statusDisplay = "Erwarte Status...";
+
+    private String remainingTime = "";
 
     public enum RoundAnimation{
         NONE, WINNING, DRAW, LOOSING;
@@ -136,6 +139,10 @@ public class PlayView extends ProgramView {
             randomizeColor(drawTool);
             drawTool.drawText(200,300,"YOU LOSE!");
         }
+        drawTool.formatText("Arial", Font.BOLD,11);
+        drawTool.setCurrentColor(255,255,0,255);
+        drawTool.drawText(10,575,statusDisplay);
+        drawTool.drawText(10,550,remainingTime);
     }
 
     private void randomizeColor(DrawTool drawTool){
@@ -179,6 +186,9 @@ public class PlayView extends ProgramView {
             activateChoosing();
             setEnemyChoice(2);
         }
+        if(key == KeyEvent.VK_X){
+            programController.setState(ProgramController.State.FINISHED);
+        }
     }
 
     @Override
@@ -213,4 +223,11 @@ public class PlayView extends ProgramView {
         }
     }
 
+    public void setRemainingTime(String remainingTime) {
+        this.remainingTime = remainingTime;
+    }
+
+    public void setStatusDisplay(String statusDisplay) {
+        this.statusDisplay = statusDisplay;
+    }
 }

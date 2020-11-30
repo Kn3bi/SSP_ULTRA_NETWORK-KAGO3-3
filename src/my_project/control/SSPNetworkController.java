@@ -34,7 +34,7 @@ public class SSPNetworkController extends NetworkController {
         // todo Netzwerkschnittstelle implementieren
         if(msg.equals("sende$name")){
             programController.setState(ProgramController.State.WAITINGFORNAME);
-        } else if(msg.equals("sende$möglichkeiten")){
+        } else if(msg.equals("sende$auswahl")){
             programController.requestSelectionFromPlayer();
         } else {
             String[] tokens = msg.split("\\$");
@@ -47,10 +47,13 @@ public class SSPNetworkController extends NetworkController {
                 }
             }
             if(tokens[0].equals("punkte")){
-                programController.verarbeiteNeuePunkte(tokens[1]);
+                programController.verarbeiteNeuePunkte(tokens);
             }
             if(tokens[0].equals("status")){
-                programController.verarbeiteNeuenStatus(tokens[1]);
+                programController.verarbeiteNeuenStatus(tokens);
+            }
+            if(tokens[0].equals("zeit")){
+                programController.verarbeiteNeuenTimer(tokens[1]);
             }
         }
     }

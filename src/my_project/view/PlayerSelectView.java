@@ -18,6 +18,7 @@ public class PlayerSelectView extends ProgramView {
     private int selectedIconIndex = 0;
     private boolean autoChangeName = true;
     private String name = "Mr. Bust";
+    private String remainingTime;
 
     private BufferedImage[] playerIcons;
     private GraphicalObject change, start, waiting;
@@ -25,6 +26,7 @@ public class PlayerSelectView extends ProgramView {
 
     public PlayerSelectView(ViewController viewController, ProgramController programController){
         super(viewController,programController);
+        remainingTime = "";
         playerIcons = new BufferedImage[8];
         playerIcons[0] = this.createImage("assets/images/playerIcons/icon_bust.png");
         playerIcons[1] = this.createImage("assets/images/playerIcons/icon_cat.png");
@@ -130,6 +132,9 @@ public class PlayerSelectView extends ProgramView {
             drawTool.drawFilledRectangle(450,50+(i-4)*120,105,105);
             drawTool.drawImage(playerIcons[i],455,55+(i-4)*120);
         }
+        drawTool.formatText("Arial", Font.BOLD,11);
+        drawTool.setCurrentColor(255,255,0,255);
+        drawTool.drawText(10,550,remainingTime);
     }
 
     private void autoChangeName(int i){
@@ -162,4 +167,7 @@ public class PlayerSelectView extends ProgramView {
         return name;
     }
 
+    public void setRemainingTime(String remainingTime) {
+        this.remainingTime = remainingTime;
+    }
 }
