@@ -19,6 +19,7 @@ public class StartView extends ProgramView {
     private GIFPainter background;
     private BufferedImage arrowL, arrowR, retry;
 
+
     public StartView(ViewController viewController, ProgramController programController){
         super(viewController,programController);
         viewController.getSoundController().loadSound("assets/sounds/toglory.mp3","title",true);
