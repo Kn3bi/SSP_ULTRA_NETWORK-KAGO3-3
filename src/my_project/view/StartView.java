@@ -77,6 +77,12 @@ public class StartView extends ProgramView {
     }
 
     @Override
+    public void disposeView(){
+        super.disposeView();
+        viewController.getSoundController().stopSound("welcome");
+    }
+
+    @Override
     public void mouseReleased(MouseEvent e) {
         if(state == 2){
             double x = e.getX();
