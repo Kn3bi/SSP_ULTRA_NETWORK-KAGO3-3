@@ -19,10 +19,11 @@ public class ProgramController {
     //Attribute
     private int targetPort;
     private int currentTimerValue;
+    private boolean aussetzen;
 
     // Referenzen
     private ViewController viewController;  // diese Referenz soll auf ein Objekt der Klasse viewController zeigen. Über dieses Objekt wird das Fenster gesteuert.
-    private SSPNetworkController SSPNetworkController;
+    private SSPNetworkController networkController;
     private StartView startView;
     private PlayerSelectView playerSelectView;
     private PlayView playView;
@@ -51,7 +52,7 @@ public class ProgramController {
      * Diese Methode wird genau ein mal nach Programmstart aufgerufen. Achtung: funktioniert nicht im Szenario-Modus
      */
     public void startProgram() {
-        SSPNetworkController = new SSPNetworkController(this);
+        networkController = new SSPNetworkController(this);
         while(targetPort < 1000 || targetPort > 65000) {
             try {
                 String m = JOptionPane.showInputDialog("Port für Spielserver (1000 bis 65000) eingeben:");
@@ -61,6 +62,20 @@ public class ProgramController {
                 JOptionPane.showMessageDialog(viewController.getDrawFrame(), "Wer keine Zahl eingeben kann, darf nicht spielen.", "Braincheck", JOptionPane.ERROR_MESSAGE);
             }
         }
+        restart();
+    }
+
+    private void restart(){
+        if(playView != null) playView.disposeView();
+        if(startView != null) startView.disposeView();
+        if(playerSelectView != null) playerSelectView.disposeView();
+        if(conclusionView != null) conclusionView.disposeView();
+        lastRanking = new String[3];
+        lastRanking[0] = "Kein";
+        lastRanking[1] = "Ranking";
+        lastRanking[2] = "-1";
+        currentTimerValue = 0;
+        aussetzen = false;
         startView = new StartView(viewController,this);
         setState(State.SCANNING);
     }
@@ -73,8 +88,8 @@ public class ProgramController {
      */
     public void updateProgram(double dt){
         if(state == State.SCANNING){
-            if (SSPNetworkController.getServerIP() != null){
-                if (SSPNetworkController.getServerIP().equals("timeout")){
+            if (networkController.getServerIP() != null){
+                if (networkController.getServerIP().equals("timeout")){
                     startView.displayTryAgain();
                     setState(State.TRYAGAIN);
                 } else {
@@ -84,7 +99,7 @@ public class ProgramController {
                 startView.displayScanning();
             }
         }
-        if(state == State.PLAYERSELECT || state == State.PLAYING){
+        if(state == State.PLAYING || state == State.WAITINGFORNAME){
             displayTimer();
         }
     }
@@ -95,31 +110,36 @@ public class ProgramController {
      */
     public void setState(State state){
         this.state = state;
-        if (state == State.SCANNING) SSPNetworkController.startNetworkScan(targetPort);
+        if (state == State.SCANNING) networkController.startNetworkScan(targetPort);
         if (state == State.PLAYERSELECT){
             startView.disposeView();
-            SSPNetworkController.startConnection();
+            networkController.startConnection();
             playerSelectView = new PlayerSelectView(viewController,this);
         }
         if (state == State.PLAYING){
             player = new Player(playerSelectView.getName());
             playerSelectView.disposeView();
             playView = new PlayView(viewController,this,playerSelectView.getPlayerIcons(),playerSelectView.getSelectedIconIndex(),player.getName(),player.getPunkte());
-            SSPNetworkController.sendPlayerName(player);
+            networkController.sendPlayerName(player);
        }
         if(state == State.FINISHED){
             playView.disposeView();
-            conclusionView = new ConclusionView(viewController,this,player.getName(),player.getPunkte(),playerSelectView.getPlayerIcons()[playerSelectView.getSelectedIconIndex()]);
+            if(lastRanking[2].equals(player.getName())){
+                conclusionView = new ConclusionView(viewController,this,playerSelectView.getPlayerIcons()[playerSelectView.getSelectedIconIndex()],lastRanking, ConclusionView.Conclusion.WIN);
+            } else {
+                conclusionView = new ConclusionView(viewController,this,playerSelectView.getPlayerIcons()[playerSelectView.getSelectedIconIndex()],lastRanking, ConclusionView.Conclusion.LOSE);
+            }
         }
     }
 
     public void mouseClicked(MouseEvent e){}
 
     public void sendSelectionToServer(int selectedIndex){
-        SSPNetworkController.sendPlayerChoice(convertNumberToLetter(selectedIndex));
+        networkController.sendPlayerChoice(convertNumberToLetter(selectedIndex));
     }
 
     public void requestSelectionFromPlayer(){
+        aussetzen = false;
         playView.activateChoosing();
     }
 
@@ -145,13 +165,6 @@ public class ProgramController {
                 }
             }
             int newPoints = Integer.parseInt(punkte);
-            if(newPoints > player.getPunkte() + 1){
-                playView.showRoundAnimation(PlayView.RoundAnimation.WINNING);
-            } else if (newPoints == player.getPunkte()+1){
-                playView.showRoundAnimation(PlayView.RoundAnimation.DRAW);
-            } else {
-                playView.showRoundAnimation(PlayView.RoundAnimation.LOOSING);
-            }
             player.setPunkte(newPoints);
             playView.setPlayerPoints(newPoints);
             playView.setStatusDisplay(status);
@@ -196,25 +209,46 @@ public class ProgramController {
 
     private void displayTimer(){
         String msg = "";
-        if (currentTimerValue == -1){
-            msg = "Keine Timer";
+        if (currentTimerValue <= 0){
+            msg = "Momentan kein Zeitlimit";
         } else {
-            msg = "Zeit für deine Entscheidung: "+currentTimerValue+ "s";
+            if(aussetzen){
+                msg = "Maximale Wartezeit bis du dran bist: "+currentTimerValue+ "s";
+            }else{
+                msg = "Zeit für deine Entscheidung: "+currentTimerValue+ "s";
+            }
         }
-        if (playView != null) playView.setRemainingTime(msg);
         if (playerSelectView != null) playerSelectView.setRemainingTime(msg);
+        if (playView != null){
+            playView.setRemainingTime(msg);
+        }
     }
 
     public void verarbeiteNeuenStatus(String[] status){
-        if(status.equals("gewonnen")){
-
+        if(status[1].equals("aussetzen")){
+            aussetzen = true;
         }
-        if(status.equals("verloren")){
-
+        if(status[1].equals("rausgeworfen")){
+            String reason = status[2];
+            JOptionPane.showMessageDialog(viewController.getDrawFrame(),"Grund für deinen Rauswurf: "+reason,"Der Server hat dich rausgeworfen!",JOptionPane.WARNING_MESSAGE);
+            restart();
         }
-        if(status.equals("aussetzen")){
-
+        if(status[1].equals("spielende")){
+            this.setState(State.FINISHED);
         }
+        if(status[1].equals("ausgang")){
+            if(status[2].equals("gewonnen")){
+                playView.showRoundAnimation(PlayView.RoundAnimation.WINNING);
+            } else if (status[2].equals("verloren")){
+                playView.showRoundAnimation(PlayView.RoundAnimation.LOOSING);
+            } else if (status[2].equals("unentschieden")){
+                playView.showRoundAnimation(PlayView.RoundAnimation.DRAW);
+            }
+        }
+    }
+
+    public boolean isAussetzen(){
+        return aussetzen;
     }
 
 }

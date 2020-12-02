@@ -26,7 +26,6 @@ public class PlayView extends ProgramView {
     private String enemyName = null, playername;
     private boolean mayChoose = true;
     private int playerPoints;
-    private boolean winning;
     private RoundAnimation currentAni;
     private double aniTimer;
     private String statusDisplay = "Erwarte Status...";
@@ -124,6 +123,7 @@ public class PlayView extends ProgramView {
             }
         }
         // Animationen zum Rundenende (noch primitiv)
+
         if (currentAni == RoundAnimation.DRAW){
             drawTool.formatText("Arial", Font.BOLD,48);
             randomizeColor(drawTool);
@@ -142,7 +142,9 @@ public class PlayView extends ProgramView {
         drawTool.formatText("Arial", Font.BOLD,11);
         drawTool.setCurrentColor(255,255,0,255);
         drawTool.drawText(10,575,statusDisplay);
-        drawTool.drawText(10,550,remainingTime);
+        if(programController.isAussetzen() || this.state == 1){
+            drawTool.drawText(10,550,remainingTime);
+        }
     }
 
     private void randomizeColor(DrawTool drawTool){
@@ -163,10 +165,6 @@ public class PlayView extends ProgramView {
 
     public void setEnemyChoice(int index){
         selectedEnemyIndex = index;
-    }
-
-    public void winRound(boolean winning){
-        this.winning = winning;
     }
 
     public void setPlayerPoints(int p){
@@ -229,5 +227,10 @@ public class PlayView extends ProgramView {
 
     public void setStatusDisplay(String statusDisplay) {
         this.statusDisplay = statusDisplay;
+    }
+
+    public void disposeView(){
+        super.disposeView();
+        viewController.getSoundController().stopSound("battle");
     }
 }

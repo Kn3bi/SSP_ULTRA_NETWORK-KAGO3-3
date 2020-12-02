@@ -133,8 +133,8 @@ public class PlayerSelectView extends ProgramView {
             drawTool.drawImage(playerIcons[i],455,55+(i-4)*120);
         }
         drawTool.formatText("Arial", Font.BOLD,11);
-        drawTool.setCurrentColor(255,255,0,255);
-        drawTool.drawText(10,550,remainingTime);
+        drawTool.setCurrentColor(0,0,0,255);
+        drawTool.drawText(10,585,remainingTime);
     }
 
     private void autoChangeName(int i){

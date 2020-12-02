@@ -31,7 +31,7 @@ public class SSPNetworkController extends NetworkController {
      */
     @Override
     public void processServerRequest(String msg){
-        // todo Netzwerkschnittstelle implementieren
+        System.out.println(msg);
         if(msg.equals("sende$name")){
             programController.setState(ProgramController.State.WAITINGFORNAME);
         } else if(msg.equals("sende$auswahl")){
