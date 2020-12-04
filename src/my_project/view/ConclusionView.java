@@ -35,14 +35,14 @@ public class ConclusionView extends ProgramView {
         viewController.getSoundController().loadSound("assets/sounds/victory.mp3","win",true);
         if(conclusion == Conclusion.LOSE) viewController.getSoundController().playSound("lose");
         if(conclusion == Conclusion.WIN) viewController.getSoundController().playSound("win");
+        background = new GIFPainter("assets/images/conclusion_background.gif",0,0);
     }
 
     @Override
     public void draw(DrawTool drawTool) {
-        drawTool.drawImage(playerImage,250,0);
+        background.draw(drawTool);
+        drawTool.drawImage(playerImage,250,80);
         drawTool.formatText("Purisa", Font.BOLD, 24);
-        drawTool.setCurrentColor(0, 0, 0, 255);
-        drawTool.drawFilledRectangle(0, 0, 600, 600);
         drawTool.setCurrentColor(255, 255, 255, 255);
         if(conclusion == Conclusion.WIN){
             drawTool.drawText(235, 50, "You WIN!");
@@ -56,6 +56,7 @@ public class ConclusionView extends ProgramView {
         for(int i = 1; i < ranking.length-1; i++){
             drawTool.drawText(40, 220+i*20, rank+". Platz: "+ranking[i]+" mit "+ranking[i+1]+" Punkten");
             i++;
+            rank++;
         }
     }
 

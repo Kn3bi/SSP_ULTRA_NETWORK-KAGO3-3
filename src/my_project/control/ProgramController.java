@@ -124,7 +124,7 @@ public class ProgramController {
        }
         if(state == State.FINISHED){
             playView.disposeView();
-            if(lastRanking[2].equals(player.getName())){
+            if(lastRanking[1].equals(player.getName())){
                 conclusionView = new ConclusionView(viewController,this,playerSelectView.getPlayerIcons()[playerSelectView.getSelectedIconIndex()],lastRanking, ConclusionView.Conclusion.WIN);
             } else {
                 conclusionView = new ConclusionView(viewController,this,playerSelectView.getPlayerIcons()[playerSelectView.getSelectedIconIndex()],lastRanking, ConclusionView.Conclusion.LOSE);
@@ -154,11 +154,12 @@ public class ProgramController {
     public void verarbeiteNeuePunkte(String[] tokens){
         lastRanking = tokens;
         try{
-            String punkte = "-999"; // Fehlerwert
+            String punkte = "-1"; // Fehlerwert
             String status = "Punktestand --- ";
             for(int i = 0; i < tokens.length; i++){
                 if(tokens[i].equals(player.getName())){
                     punkte = tokens[i+1];
+                    playView.setPlayerPoints(Integer.parseInt(punkte));
                 }
                 if(i>0 & i%2 == 1){
                     status = status + tokens[i] + "-Punkte: "+tokens[i+1]+" ";
