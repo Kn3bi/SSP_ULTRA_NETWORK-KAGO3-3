@@ -5,6 +5,7 @@ import KAGO_framework.view.DrawTool;
 import KAGO_framework.view.ProgramView;
 import KAGO_framework.view.simple_gui.GIFPainter;
 import my_project.control.ProgramController;
+import my_project.control.ServerController;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -61,6 +62,8 @@ public class StartView extends ProgramView {
             drawTool.drawText(210,530,"Timeout. Retry?");
             drawTool.drawTransformedImage(retry,300-retry.getWidth()/2,240-retry.getHeight()/2,offset,1);
         }
+        drawTool.formatText("Arial", Font.BOLD,11);
+        drawTool.drawText(430,585,"For rogue-server: press s");
     }
 
     @Override
@@ -78,8 +81,8 @@ public class StartView extends ProgramView {
 
     @Override
     public void disposeView(){
-        super.disposeView();
         viewController.getSoundController().stopSound("welcome");
+        super.disposeView();
     }
 
     @Override
@@ -100,8 +103,12 @@ public class StartView extends ProgramView {
     @Override
     public void keyReleased(int key) {
         super.keyReleased(key);
-        if(key == KeyEvent.VK_N){
+        if (key == KeyEvent.VK_N) {
             programController.setState(ProgramController.State.PLAYERSELECT);
+        }
+        if (key == KeyEvent.VK_S) {
+            // Start evil rogue Server
+            new ServerController(1337, viewController);
         }
     }
 }
