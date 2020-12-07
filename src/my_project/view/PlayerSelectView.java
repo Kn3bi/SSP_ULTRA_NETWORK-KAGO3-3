@@ -59,10 +59,6 @@ public class PlayerSelectView extends ProgramView {
         if(key == KeyEvent.VK_N){
             programController.setState(ProgramController.State.WAITINGFORNAME);
         }
-        if(key == KeyEvent.VK_S){
-            // Start evil rogue Server
-            new ServerController(1234,viewController);
-        }
     }
 
     @Override
@@ -140,7 +136,6 @@ public class PlayerSelectView extends ProgramView {
         drawTool.formatText("Arial", Font.BOLD,11);
         drawTool.setCurrentColor(0,0,0,255);
         drawTool.drawText(10,585,remainingTime);
-        drawTool.drawText(450,585,"For rogue-server: press s");
     }
 
     private void autoChangeName(int i){

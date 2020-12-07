@@ -14,6 +14,7 @@ public class SSPNetworkController extends NetworkController {
      * @param player das Spielerobjekt der Partie
      */
     public void sendPlayerName(Player player){
+        System.out.println("Sende an Server: "+"name"+"$"+player.getName());
         send("name"+"$"+player.getName());
     }
 
@@ -22,6 +23,7 @@ public class SSPNetworkController extends NetworkController {
      * @param choice die getroffene Auswahl
      */
     public void sendPlayerChoice(String choice){
+        System.out.println("Sende an Server: "+"spiele"+"$"+choice);
         send("spiele"+"$"+choice);
     }
 
@@ -31,7 +33,7 @@ public class SSPNetworkController extends NetworkController {
      */
     @Override
     public void processServerRequest(String msg){
-        System.out.println(msg);
+        System.out.println("Empfange von Server: "+msg);
         if(msg.equals("sende$name")){
             programController.setState(ProgramController.State.WAITINGFORNAME);
         } else if(msg.equals("sende$auswahl")){
