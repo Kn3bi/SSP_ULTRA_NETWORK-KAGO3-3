@@ -162,7 +162,7 @@ public class ProgramController {
                     playView.setPlayerPoints(Integer.parseInt(punkte));
                 }
                 if(i>0 & i%2 == 1){
-                    status = status + tokens[i] + "-Punkte: "+tokens[i+1]+" ";
+                    status = status + tokens[i] + ": "+tokens[i+1]+" ";
                 }
             }
             int newPoints = Integer.parseInt(punkte);
@@ -239,11 +239,11 @@ public class ProgramController {
         }
         if(status[1].equals("ausgang")){
             if(status[2].equals("gewonnen")){
-                playView.showRoundAnimation(PlayView.RoundAnimation.WINNING);
+                playView.concludeRound(PlayView.RoundAnimation.WINNING);
             } else if (status[2].equals("verloren")){
-                playView.showRoundAnimation(PlayView.RoundAnimation.LOOSING);
+                playView.concludeRound(PlayView.RoundAnimation.LOOSING);
             } else if (status[2].equals("unentschieden")){
-                playView.showRoundAnimation(PlayView.RoundAnimation.DRAW);
+                playView.concludeRound(PlayView.RoundAnimation.DRAW);
             }
         }
     }

@@ -39,8 +39,7 @@ public class ServerController extends Server implements Drawable {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Player player = (Player) o;
-            return port == player.port &&
-                    ip.equals(player.ip);
+            return ip.equals(player.ip);
         }
 
         @Override
@@ -63,18 +62,19 @@ public class ServerController extends Server implements Drawable {
     private double gameTimer, lastFullSecond;
 
     private ArrayList<Player> players;
-    private int roundsToPlay, currentRound;
     private Gamestate gamestate;
 
     public ServerController(int pPort, ViewController viewController) {
         super(pPort);
-        players = new ArrayList<>();
+        restartServer(false);
+        viewController.draw(this);
+    }
+
+    private void restartServer(boolean keepConnections){
+        if(!keepConnections) players = new ArrayList<>();
         gamestate = Gamestate.WAITINGFORPLAYERS;
         gameTimer = 20;
         lastFullSecond = 20;
-        roundsToPlay = -1;
-        currentRound = -1;
-        viewController.draw(this);
     }
 
     @Override
@@ -91,6 +91,16 @@ public class ServerController extends Server implements Drawable {
         } else {
             send(pClientIP, pClientPort, "ERROR$Die Runde läuft schon.");
         }
+    }
+
+    private void printAllPlayers(){
+        System.out.println("Server-Status: all current players:");
+        Iterator<Player> iterator = players.iterator();
+        while(iterator.hasNext()){
+            Player temp = iterator.next();
+            System.out.println("   >"+players.indexOf(temp)+": "+temp.ip+":"+temp.port+" => name: "+temp.name);
+        }
+        System.out.println("");
     }
 
     @Override
@@ -113,6 +123,7 @@ public class ServerController extends Server implements Drawable {
                     if (tokens[1] != null){
                         currentPlayer.name = tokens[1];
                         System.out.println("Server-Status: Name von Spieler (Nr."+(players.indexOf(currentPlayer)+1)+") erhalten: "+tokens[1]);
+                        printAllPlayers();
                     }
                 } else {
                     send(pClientIP, pClientPort, "ERROR$Leere Namen sind nicht erlaubt.");
@@ -139,7 +150,22 @@ public class ServerController extends Server implements Drawable {
 
     @Override
     public void processClosingConnection(String pClientIP, int pClientPort) {
+        Iterator<Player> iterator = players.iterator();
+        while(iterator.hasNext()) {
+            Player currentPlayer =iterator.next();
+            if(currentPlayer.ip.equals(pClientIP) && currentPlayer.port == pClientPort) {
+                System.out.println("Server-Status: Player disconnected: "+pClientIP);
 
+                iterator.remove();
+                if(gamestate != Gamestate.WAITINGFORPLAYERS){
+                    if (!(gamestate == Gamestate.WAITING && players.size() >= 2)){
+                        // Es sind weniger als zwei Spieler in der Lobby oder das Spiel läuft gerade
+                        sendToAll("ERROR$Ein Spieler hat das laufende Match verlassen: Neustart wegen Ragequit");
+                        restartServer(true);
+                    }
+                }
+            }
+        }
     }
 
     private int convertLetterToNumber(String a){
@@ -219,8 +245,8 @@ public class ServerController extends Server implements Drawable {
     }
 
     private void sendGametimer(){
-        if(lastFullSecond >= Math.floor(gameTimer)){
-            sendToAll("zeit$"+Math.floor(gameTimer));
+        if(lastFullSecond > Math.floor(gameTimer)){
+            sendToAll("zeit$"+(int)Math.floor(gameTimer));
             lastFullSecond = Math.floor(gameTimer);
         }
     }

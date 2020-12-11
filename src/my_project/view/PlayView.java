@@ -22,7 +22,7 @@ public class PlayView extends ProgramView {
     private int playerIconIndex, enemyIconIndex;
     private int state = 0;
     private int selectedIndex = -1;
-    private int selectedEnemyIndex = -1;
+    private int selectedEnemyChoiceIndex = -1;
     private String enemyName = null, playername;
     private boolean mayChoose = true;
     private int playerPoints;
@@ -98,14 +98,11 @@ public class PlayView extends ProgramView {
             drawTool.setCurrentColor(50,50,50,120);
             drawTool.drawFilledRectangle(gameIcons[0].getX()-10,gameIcons[0].getY()-10,5*110+10,gameIcons[0].getHeight()+30);
         }
-        drawTool.drawImage(playerImageIcons[playerIconIndex],50,300);
-        drawTool.formatText("Purisa", Font.BOLD,18);
-        drawTool.drawText(50,430,playername);
-        drawTool.drawText(225,520,"Deine Punkte: "+playerPoints);
         if(enemyIconIndex != -1){
             drawTool.drawImage(playerImageIcons[enemyIconIndex],550-playerImageIcons[enemyIconIndex].getWidth(),300);
-            drawTool.formatText("Purisa", Font.BOLD,18);
-            drawTool.drawText(550-playerImageIcons[enemyIconIndex].getWidth(),430,enemyName);
+            drawTool.formatText("Purisa", Font.BOLD,16);
+            drawTool.setCurrentColor(255,0,0,255);
+            drawTool.drawText((550-playerImageIcons[enemyIconIndex].getWidth()*0.5)+10-4.85*enemyName.length(),290,enemyName);
         }
         if(state == 0){
             drawTool.drawImage(waiting, 300-waiting.getWidth()/2, 300);
@@ -116,34 +113,45 @@ public class PlayView extends ProgramView {
             if(selectedIndex != -1){
                 drawTool.drawImage(gameIcons[selectedIndex].getMyImage(),150,375);
             }
-            if(selectedEnemyIndex != -1){
-                drawTool.drawImage(gameIcons[selectedEnemyIndex].getMyImage(),450-gameIcons[selectedEnemyIndex].getWidth(),375);
+            if(selectedEnemyChoiceIndex != -1){
+                drawTool.drawImage(gameIcons[selectedEnemyChoiceIndex].getMyImage(),450-gameIcons[selectedEnemyChoiceIndex].getWidth(),375);
             } else {
                 //drawTool.drawText(450-gameIcons[0].getWidth(),380,"???");
             }
         }
-        // Animationen zum Rundenende (noch primitiv)
-
-        if (currentAni == RoundAnimation.DRAW){
-            drawTool.formatText("Arial", Font.BOLD,48);
-            randomizeColor(drawTool);
-            drawTool.drawText(200,300,"DRAW!");
-        }
-        if (currentAni == RoundAnimation.WINNING){
-            drawTool.formatText("Arial", Font.BOLD,48);
-            randomizeColor(drawTool);
-            drawTool.drawText(200,300,"YOU WIN!!");
-        }
-        if (currentAni == RoundAnimation.LOOSING){
-            drawTool.formatText("Arial", Font.BOLD,48);
-            randomizeColor(drawTool);
-            drawTool.drawText(200,300,"YOU LOSE!");
-        }
-        drawTool.formatText("Arial", Font.BOLD,11);
+        // Statustexte
+        drawTool.setCurrentColor(0,255,0,255);
+        drawTool.drawImage(playerImageIcons[playerIconIndex],50,300);
+        drawTool.formatText("Purisa", Font.BOLD,16);
+        drawTool.drawText((50+playerImageIcons[playerIconIndex].getWidth()*0.5)-4.85*playername.length(),290,playername);
+        drawTool.setCurrentColor(255,255,255,255);
+        drawTool.drawText(225,520,"Deine Punkte: "+playerPoints);
+        drawTool.formatText("Arial", Font.PLAIN,11);
         drawTool.setCurrentColor(255,255,0,255);
         drawTool.drawText(10,575,statusDisplay);
         if(programController.isAussetzen() || this.state == 1){
             drawTool.drawText(10,550,remainingTime);
+            if(programController.isAussetzen()) {
+                drawTool.formatText("Arial", Font.BOLD, 40);
+                drawTool.setCurrentColor(255, 255, 255, 255);
+                drawTool.drawText(180, 250, "Aussetzen...");
+            }
+        }
+        // Animationen zum Rundenende (noch primitiv)
+        if (currentAni == RoundAnimation.DRAW){
+            drawTool.formatText("Arial", Font.BOLD,48);
+            randomizeColor(drawTool);
+            drawTool.drawText(220,300,"DRAW!");
+        }
+        if (currentAni == RoundAnimation.WINNING){
+            drawTool.formatText("Arial", Font.BOLD,48);
+            randomizeColor(drawTool);
+            drawTool.drawText(180,300,"YOU WIN!!");
+        }
+        if (currentAni == RoundAnimation.LOOSING){
+            drawTool.formatText("Arial", Font.BOLD,48);
+            randomizeColor(drawTool);
+            drawTool.drawText(170,300,"YOU LOSE!");
         }
     }
 
@@ -153,6 +161,7 @@ public class PlayView extends ProgramView {
 
     public void setNextEnemy(String enemyName){
         this.enemyName = enemyName;
+        if(this.enemyName.length() >= 10) this.enemyName = this.enemyName.substring(0,9);
         int random = (int)(Math.random()*5);
         enemyIconIndex = (playerIconIndex + random) % 5;
     }
@@ -164,14 +173,14 @@ public class PlayView extends ProgramView {
     }
 
     public void setEnemyChoice(int index){
-        selectedEnemyIndex = index;
+        selectedEnemyChoiceIndex = index;
     }
 
     public void setPlayerPoints(int p){
         playerPoints = p;
     }
 
-    public void showRoundAnimation(RoundAnimation ani){
+    public void concludeRound(RoundAnimation ani){
         this.currentAni = ani;
         aniTimer = 5;
     }
@@ -212,7 +221,9 @@ public class PlayView extends ProgramView {
         viewController.getSoundController().setVolume("battle",0.25);
         if(currentAni != RoundAnimation.NONE && aniTimer <= 0){
             selectedIndex = -1;
-            selectedEnemyIndex = -1;
+            selectedEnemyChoiceIndex = -1;
+            enemyIconIndex = -1;
+            enemyName = "<Unknown Player>";
             currentAni = RoundAnimation.NONE;
         }
         if(currentAni != RoundAnimation.NONE && aniTimer > 0){
