@@ -63,6 +63,7 @@ public class StartView extends ProgramView {
             drawTool.drawTransformedImage(retry,300-retry.getWidth()/2,240-retry.getHeight()/2,offset,1);
         }
         drawTool.formatText("Arial", Font.BOLD,11);
+        drawTool.drawText(430,555,"For direct-connect: press c");
         drawTool.drawText(430,585,"For rogue-server: press s");
     }
 
@@ -108,7 +109,11 @@ public class StartView extends ProgramView {
         }
         if (key == KeyEvent.VK_S) {
             // Start evil rogue Server
-            new ServerController(1337, viewController);
+            new ServerController(1337, viewController,programController);
+        }
+        if (key == KeyEvent.VK_C) {
+            // Connect to hard coded server
+            this.programController.quickConnect();
         }
     }
 }

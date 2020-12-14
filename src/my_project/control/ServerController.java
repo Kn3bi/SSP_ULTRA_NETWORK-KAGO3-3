@@ -62,12 +62,14 @@ public class ServerController extends Server implements Drawable {
     private double gameTimer, lastFullSecond;
 
     private ArrayList<Player> players;
+    private ProgramController programController;
     private Gamestate gamestate;
 
-    public ServerController(int pPort, ViewController viewController) {
+    public ServerController(int pPort, ViewController viewController, ProgramController programController) {
         super(pPort);
         restartServer(false);
         viewController.draw(this);
+        this.programController = programController;
     }
 
     private void restartServer(boolean keepConnections){
@@ -134,7 +136,7 @@ public class ServerController extends Server implements Drawable {
             // WAHL SPIELEN
             if(tokens[0].equals("spiele") && gamestate == Gamestate.PLAYINGROUND){
                 if(currentPlayer.lastChoice == -1 && currentPlayer.isFighting) {
-                    int wahl = convertLetterToNumber(tokens[1]);
+                    int wahl = programController.convertLetterToNumber(tokens[1]);
                     if (wahl != -1) {
                         currentPlayer.lastChoice = wahl;
                         System.out.println("Server-Status: Wahl von Spieler (Nr."+(players.indexOf(currentPlayer)+1)+") erhalten: "+tokens[1]);
@@ -167,29 +169,6 @@ public class ServerController extends Server implements Drawable {
             }
         }
     }
-
-    private int convertLetterToNumber(String a){
-        switch (a){
-            case "A": return 0;
-            case "B": return 1;
-            case "C": return 2;
-            case "D": return 3;
-            case "E": return 4;
-        }
-        return -1;
-    }
-
-    private String convertNumberToLetter(int a){
-        switch(a){
-            case 0: return "A";
-            case 1: return "B";
-            case 2: return "C";
-            case 3: return "D";
-            case 4: return "E";
-        }
-        return "";
-    }
-
 
     @Override
     public void draw(DrawTool drawTool) {
@@ -359,8 +338,8 @@ public class ServerController extends Server implements Drawable {
     private void concludeMatch(Player p1, Player p2){
         p1.isFighting = false;
         p2.isFighting = false;
-        send(p1.ip,p1.port,"gegner$auswahl$"+convertNumberToLetter(p2.lastChoice));
-        send(p2.ip,p2.port,"gegner$auswahl$"+convertNumberToLetter(p1.lastChoice));
+        send(p1.ip,p1.port,"gegner$auswahl$"+programController.convertNumberToLetter(p2.lastChoice));
+        send(p2.ip,p2.port,"gegner$auswahl$"+programController.convertNumberToLetter(p1.lastChoice));
         if(p1.lastChoice == p2.lastChoice){
             send(p1.ip,p1.port,"status$ausgang$unentschieden");
             send(p2.ip,p2.port,"status$ausgang$unentschieden");

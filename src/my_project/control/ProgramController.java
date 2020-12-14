@@ -71,8 +71,8 @@ public class ProgramController {
         if(playerSelectView != null) playerSelectView.disposeView();
         if(conclusionView != null) conclusionView.disposeView();
         lastRanking = new String[3];
-        lastRanking[0] = "Kein";
-        lastRanking[1] = "Ranking";
+        lastRanking[0] = "Bisher kein";
+        lastRanking[1] = "Ranking erhalten";
         lastRanking[2] = "-1";
         currentTimerValue = 0;
         aussetzen = false;
@@ -178,7 +178,7 @@ public class ProgramController {
         return state;
     }
 
-    private int convertLetterToNumber(String a){
+    public int convertLetterToNumber(String a){
         switch (a){
             case "A": return 0;
             case "B": return 1;
@@ -189,7 +189,7 @@ public class ProgramController {
         return -1;
     }
 
-    private String convertNumberToLetter(int a){
+    public String convertNumberToLetter(int a){
         switch(a){
             case 0: return "A";
             case 1: return "B";
@@ -250,6 +250,15 @@ public class ProgramController {
 
     public boolean isAussetzen(){
         return aussetzen;
+    }
+
+    public void quickConnect(){
+        String ip = JOptionPane.showInputDialog("Bitte IP-Adresse eingeben:");
+        try {
+            this.networkController.startConnection(ip);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
