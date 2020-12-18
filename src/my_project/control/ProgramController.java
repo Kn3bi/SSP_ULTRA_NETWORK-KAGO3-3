@@ -34,7 +34,12 @@ public class ProgramController {
 
     // Enum
     public enum State {
-        SCANNING, TRYAGAIN, PLAYERSELECT, WAITINGFORNAME, PLAYING, FINISHED
+        SCANNING, // Auf eine gültige Verbindung wird gewartet bzw. Scan erfolgt
+        TRYAGAIN, // Der Scan war ohne Erfolg und kann neu gestartet werden
+        PLAYERSELECT, // Avatarauswahl und Namenseingabe
+        WAITINGFORNAME, // Name kann abgeschickt werden
+        PLAYING, // Spielrunde oder Aussetzen inkl. Ausgangsanzeige
+        FINISHED // Endbildschirm mit Ranking
     }
 
     /**
