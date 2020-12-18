@@ -155,11 +155,13 @@ public abstract class NetworkController{
      * Erstellt einen neuen Client, der sich mit dem Server verbindet.
      * Verwendet die intern im Objekt vermittelte IP-Adresse
      */
-    public void startConnection(){
+    public boolean startConnection(){
         if(serverIP != null && !serverIP.equals("timeout")){
             System.out.println("NetworkController: Trying to connect to: "+serverIP+" on "+port);
             networkClient = new NetworkClient(serverIP,port,this);
+            return networkClient.isConnected();
         }
+        return false;
     }
 
     public void setServerIP(String ip){

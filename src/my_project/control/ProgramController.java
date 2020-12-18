@@ -117,11 +117,17 @@ public class ProgramController {
      */
     public void setState(State state){
         this.state = state;
-        if (state == State.SCANNING) networkController.startNetworkScan(targetPort);
+        if (state == State.SCANNING){
+            networkController.startNetworkScan(targetPort);
+        }
         if (state == State.PLAYERSELECT){
             startView.disposeView();
-            networkController.startConnection();
-            playerSelectView = new PlayerSelectView(viewController,this);
+            if(networkController.startConnection()){
+                playerSelectView = new PlayerSelectView(viewController,this);
+            } else {
+                JOptionPane.showMessageDialog(viewController.getDrawFrame(),"Verbindung fehlgeschlagen.","Warnung",JOptionPane.ERROR_MESSAGE);
+                restart();
+            }
         }
         if (state == State.PLAYING){
             player = new Player(playerSelectView.getName());
