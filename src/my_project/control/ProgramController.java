@@ -270,7 +270,7 @@ public class ProgramController {
         return aussetzen;
     }
 
-    public void quickConnect(){
+    public void manualConnect(){
         String ip = JOptionPane.showInputDialog("Bitte IP-Adresse eingeben:");
         try {
             this.networkController.setServerIP(ip);

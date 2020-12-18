@@ -113,7 +113,7 @@ public class StartView extends ProgramView {
         }
         if (key == KeyEvent.VK_C) {
             // Connect to hard coded server
-            this.programController.quickConnect();
+            this.programController.manualConnect();
         }
     }
 }
