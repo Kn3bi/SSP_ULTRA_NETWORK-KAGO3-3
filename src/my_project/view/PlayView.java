@@ -20,7 +20,7 @@ public class PlayView extends ProgramView {
     private BufferedImage[] playerImageIcons;
 
     private int playerIconIndex, enemyIconIndex;
-    private int state = 0;
+    private int state = 0; // 0 => Auswahl zum testen || 1 => nächste Auswahl gilt
     private int selectedIndex = -1;
     private int selectedEnemyChoiceIndex = -1;
     private String enemyName = null, playername;
