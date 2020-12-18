@@ -113,7 +113,7 @@ public class ProgramController {
         if (state == State.SCANNING) networkController.startNetworkScan(targetPort);
         if (state == State.PLAYERSELECT){
             startView.disposeView();
-            networkController.startConnection();
+            networkController.setServerIP();
             playerSelectView = new PlayerSelectView(viewController,this);
         }
         if (state == State.PLAYING){
@@ -255,7 +255,7 @@ public class ProgramController {
     public void quickConnect(){
         String ip = JOptionPane.showInputDialog("Bitte IP-Adresse eingeben:");
         try {
-            this.networkController.startConnection(ip);
+            this.networkController.setServerIP(ip);
         } catch (Exception e) {
             e.printStackTrace();
         }
