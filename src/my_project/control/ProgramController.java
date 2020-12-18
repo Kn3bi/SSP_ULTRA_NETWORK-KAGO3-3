@@ -113,7 +113,7 @@ public class ProgramController {
         if (state == State.SCANNING) networkController.startNetworkScan(targetPort);
         if (state == State.PLAYERSELECT){
             startView.disposeView();
-            networkController.setServerIP();
+            networkController.startConnection();
             playerSelectView = new PlayerSelectView(viewController,this);
         }
         if (state == State.PLAYING){
