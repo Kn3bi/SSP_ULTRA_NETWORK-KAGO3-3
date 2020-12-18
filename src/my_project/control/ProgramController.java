@@ -99,6 +99,13 @@ public class ProgramController {
                 startView.displayScanning();
             }
         }
+        if(state == State.TRYAGAIN){
+            if (networkController.getServerIP() != null) {
+                if (!networkController.getServerIP().equals("timeout")) {
+                    setState(State.PLAYERSELECT);
+                }
+            }
+        }
         if(state == State.PLAYING || state == State.WAITINGFORNAME){
             displayTimer();
         }
