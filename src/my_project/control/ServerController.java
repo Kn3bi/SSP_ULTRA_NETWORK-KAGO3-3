@@ -39,7 +39,7 @@ public class ServerController extends Server implements Drawable {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Player player = (Player) o;
-            return ip.equals(player.ip);
+            return ip.equals(player.ip) && port == player.port;
         }
 
         @Override
@@ -60,6 +60,7 @@ public class ServerController extends Server implements Drawable {
     }
 
     private double gameTimer, lastFullSecond;
+    private boolean inModification; // protection flag for iterator
 
     private ArrayList<Player> players;
     private ProgramController programController;
@@ -81,10 +82,10 @@ public class ServerController extends Server implements Drawable {
 
     @Override
     public void processNewConnection(String pClientIP, int pClientPort) {
-        Player newPlayer = new Player(pClientIP,pClientPort);
-        if(gamestate == Gamestate.WAITINGFORPLAYERS) {
+        if (gamestate == Gamestate.WAITINGFORPLAYERS) {
+            Player newPlayer = new Player(pClientIP, pClientPort);
             if (!players.contains(newPlayer)) {
-                System.out.println("Server-Status: Neuen Spieler hinzugefügt (Nr."+players.size()+"): "+newPlayer.ip+" => erbitte Name.");
+                System.out.println("Server-Status: Neuen Spieler hinzugefügt (Nr." + players.size() + "): " + newPlayer.ip + " => erbitte Name.");
                 players.add(newPlayer);
             } else {
                 send(pClientIP, pClientPort, "ERROR$Du bist schon angemeldet.");
@@ -111,7 +112,7 @@ public class ServerController extends Server implements Drawable {
         Player currentPlayer = null;
         while(iterator.hasNext() && currentPlayer == null){
             Player temp = iterator.next();
-            if (temp.ip.equals(pClientIP)){
+            if (temp.ip.equals(pClientIP) && temp.port == pClientPort){
                 currentPlayer = temp;
             }
         }
@@ -120,31 +121,35 @@ public class ServerController extends Server implements Drawable {
         } else {
             String[] tokens = pMessage.split("\\$");
             // NAME SETZEN
-            if(currentPlayer.name == null) {
-                if (tokens[0].equals("name")) {
-                    if (tokens[1] != null){
-                        currentPlayer.name = tokens[1];
-                        System.out.println("Server-Status: Name von Spieler (Nr."+(players.indexOf(currentPlayer)+1)+") erhalten: "+tokens[1]);
-                        printAllPlayers();
+            if(gamestate == Gamestate.WAITINGFORPLAYERS) {
+                if (currentPlayer.name == null) {
+                    if (tokens[0].equals("name")) {
+                        if (tokens[1] != null) {
+                            currentPlayer.name = tokens[1];
+                            System.out.println("Server-Status: Name von Spieler (Nr." + (players.indexOf(currentPlayer) + 1) + ") erhalten: " + tokens[1]);
+                            printAllPlayers();
+                        }
+                    } else {
+                        send(pClientIP, pClientPort, "ERROR$Leere Namen sind nicht erlaubt.");
                     }
                 } else {
-                    send(pClientIP, pClientPort, "ERROR$Leere Namen sind nicht erlaubt.");
+                    send(pClientIP, pClientPort, "ERROR$Du hat bereits einen Namen gewählt.");
                 }
-            } else {
-                send(pClientIP, pClientPort, "ERROR$Du hat bereits einen Namen gewählt.");
             }
             // WAHL SPIELEN
-            if(tokens[0].equals("spiele") && gamestate == Gamestate.PLAYINGROUND){
-                if(currentPlayer.lastChoice == -1 && currentPlayer.isFighting) {
-                    int wahl = programController.convertLetterToNumber(tokens[1]);
-                    if (wahl != -1) {
-                        currentPlayer.lastChoice = wahl;
-                        System.out.println("Server-Status: Wahl von Spieler (Nr."+(players.indexOf(currentPlayer)+1)+") erhalten: "+tokens[1]);
+            if(gamestate == Gamestate.PLAYINGROUND) {
+                if (tokens[0].equals("spiele") && gamestate == Gamestate.PLAYINGROUND) {
+                    if (currentPlayer.lastChoice == -1 && currentPlayer.isFighting) {
+                        int wahl = programController.convertLetterToNumber(tokens[1]);
+                        if (wahl != -1) {
+                            currentPlayer.lastChoice = wahl;
+                            System.out.println("Server-Status: Wahl von Spieler (Nr." + (players.indexOf(currentPlayer) + 1) + ") erhalten: " + tokens[1]);
+                        } else {
+                            send(pClientIP, pClientPort, "ERROR$Die Wahl muss A,B,C,D oder E sein.");
+                        }
                     } else {
-                        send(pClientIP, pClientPort, "ERROR$Die Wahl muss A,B,C,D oder E sein.");
+                        send(pClientIP, pClientPort, "ERROR$Du hast schon gewählt oder kämpfst gerade nicht.");
                     }
-                } else{
-                    send(pClientIP, pClientPort, "ERROR$Du hast schon gewählt oder kämpfst gerade nicht.");
                 }
             }
         }
@@ -152,18 +157,19 @@ public class ServerController extends Server implements Drawable {
 
     @Override
     public void processClosingConnection(String pClientIP, int pClientPort) {
-        Iterator<Player> iterator = players.iterator();
-        while(iterator.hasNext()) {
-            Player currentPlayer =iterator.next();
-            if(currentPlayer.ip.equals(pClientIP) && currentPlayer.port == pClientPort) {
-                System.out.println("Server-Status: Player disconnected: "+pClientIP);
-
-                iterator.remove();
-                if(gamestate != Gamestate.WAITINGFORPLAYERS){
-                    if (!(gamestate == Gamestate.WAITING && players.size() >= 2)){
-                        // Es sind weniger als zwei Spieler in der Lobby oder das Spiel läuft gerade
-                        sendToAll("ERROR$Ein Spieler hat das laufende Match verlassen: Neustart wegen Ragequit");
-                        restartServer(true);
+        if(!inModification){
+            Iterator<Player> iterator = players.iterator();
+            while (iterator.hasNext()) {
+                Player currentPlayer = iterator.next();
+                if (currentPlayer.ip.equals(pClientIP) && currentPlayer.port == pClientPort) {
+                    System.out.println("Server-Status: Player disconnected: " + pClientIP);
+                    iterator.remove();
+                    if (gamestate != Gamestate.WAITINGFORPLAYERS) {
+                        if (!(gamestate == Gamestate.WAITING && players.size() >= 2)) {
+                            // Es sind weniger als zwei Spieler in der Lobby oder das Spiel läuft gerade
+                            sendToAll("ERROR$Ein Spieler hat das laufende Match verlassen: Neustart wegen Ragequit");
+                            restartServer(true);
+                        }
                     }
                 }
             }
@@ -231,12 +237,14 @@ public class ServerController extends Server implements Drawable {
     }
 
     private void generateTournament(){
+        inModification = true;
         Iterator<Player> iterator = players.iterator();
         while(iterator.hasNext()) {
             Player currentPlayer =iterator.next();
             if(currentPlayer.name == null) {
                 send(currentPlayer.ip, currentPlayer.port, "status$rausgeworfen$Du hast keinen Namen gewählt. Ciao!");
                 closeConnection(currentPlayer.ip, currentPlayer.port);
+                iterator.remove();
             }
         }
         iterator = players.iterator();
@@ -254,6 +262,7 @@ public class ServerController extends Server implements Drawable {
                 }
             }
         }
+        inModification = false;
     }
 
     private void sendPoints(){
@@ -376,6 +385,5 @@ public class ServerController extends Server implements Drawable {
     private void concludeTournament(){
         players.sort(Comparator.naturalOrder());
     }
-
 
 }
